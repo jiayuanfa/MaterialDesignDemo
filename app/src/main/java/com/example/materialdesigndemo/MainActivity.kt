@@ -9,8 +9,11 @@ import androidx.core.view.GravityCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
+
+    var adapter: FruitAdapter? = null
 
     val fruit = mutableListOf(Fruit("Apple", R.drawable.apple),
         Fruit("Banana", R.drawable.banana),
@@ -48,18 +51,41 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
 
+        initRefreshLayout()
+        initFruits()
         initRv()
     }
 
-    private fun initRv() {
+    private fun initFruits() {
         fruitList.clear()
         repeat(50) {
             val index = (0 until fruit.size).random()
             fruitList.add(fruit[index])
         }
+    }
+
+    private fun initRefreshLayout() {
+        swipeRefresh.setColorSchemeResources(R.color.design_default_color_primary)
+        swipeRefresh.setOnRefreshListener {
+            refreshFruits()
+        }
+    }
+
+    private fun refreshFruits() {
+        thread {
+            Thread.sleep(2000)
+            runOnUiThread {
+                initFruits()
+                adapter?.notifyDataSetChanged()
+                swipeRefresh.isRefreshing = false
+            }
+        }
+    }
+
+    private fun initRv() {
         val layoutManager = GridLayoutManager(this, 2)
         mRv.layoutManager = layoutManager
-        val adapter = FruitAdapter(this, fruitList)
+        adapter = FruitAdapter(this, fruitList)
         mRv.adapter = adapter
     }
 
